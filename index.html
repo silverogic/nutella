@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF Text Editor GUI - PDF 텍스트 편집기</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- Local CSS -->
+  <link rel="stylesheet" href="./public/css/style.css">
+
+  <!-- Local Vendor Scripts -->
+  <script src="./public/vendor/pdf.min.js"></script>
+  <script src="./public/vendor/pdf-lib.min.js"></script>
+  <script src="./public/vendor/fontkit.umd.min.js"></script>
+  <script src="./public/vendor/lucide.min.js"></script>
+</head>
+<body>
+  <div id="app">
+    <!-- Header Toolbar -->
+    <header class="header-toolbar glass-panel">
+      <div class="logo-section">
+        <div class="logo-badge">
+          <i data-lucide="file-text"></i>
+        </div>
+        <div>
+          <h1 class="app-title">PDF Text Editor GUI</h1>
+        </div>
+      </div>
+
+      <!-- Center Controls -->
+      <div class="toolbar-group">
+        <button id="btnOpen" class="btn btn-secondary">
+          <i data-lucide="folder-open"></i> PDF 열기
+        </button>
+        <button id="btnSample" class="btn btn-secondary" title="샘플 PDF 문서로 테스트">
+          <i data-lucide="sparkles"></i> 샘플 PDF
+        </button>
+        <input type="file" id="filePicker" accept="application/pdf" style="display: none;">
+      </div>
+
+      <div class="toolbar-group">
+        <button id="btnToolSelect" class="btn btn-active" title="텍스트 선택 및 편집 모드">
+          <i data-lucide="mouse-pointer"></i> 글자 편집
+        </button>
+        <button id="btnAddText" class="btn" title="새 텍스트 상자 추가">
+          <i data-lucide="type"></i> + 텍스트 추가
+        </button>
+      </div>
+
+      <!-- Page Nav Controls -->
+      <div class="toolbar-group page-nav-controls">
+        <button id="btnPrevPage" class="btn btn-icon-only">
+          <i data-lucide="chevron-left"></i>
+        </button>
+        <input type="number" id="inputPageNum" class="page-input" value="1" min="1">
+        <span id="totalPages">/ 1</span>
+        <button id="btnNextPage" class="btn btn-icon-only">
+          <i data-lucide="chevron-right"></i>
+        </button>
+      </div>
+
+      <!-- Zoom Controls -->
+      <div class="toolbar-group">
+        <button id="btnZoomOut" class="btn btn-icon-only" title="축소">
+          <i data-lucide="zoom-out"></i>
+        </button>
+        <span id="zoomVal" style="font-family: 'JetBrains Mono'; font-size: 0.85rem; min-width: 48px; text-align: center;">120%</span>
+        <button id="btnZoomIn" class="btn btn-icon-only" title="확대">
+          <i data-lucide="zoom-in"></i>
+        </button>
+        <button id="btnZoomReset" class="btn btn-icon-only" title="기본 크기">
+          <i data-lucide="rotate-ccw"></i>
+        </button>
+      </div>
+
+      <!-- Export Button -->
+      <div>
+        <button id="btnExport" class="btn btn-primary">
+          <i data-lucide="download"></i> PDF 저장 (Export)
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="main-container">
+      <!-- Drag & Drop Landing Overlay -->
+      <div id="emptyLanding" class="empty-landing">
+        <div id="dropZone" class="drop-zone">
+          <div class="drop-icon-wrapper">
+            <i data-lucide="file-up" style="width: 36px; height: 36px;"></i>
+          </div>
+          <div class="drop-title">편집할 PDF 파일을 마우스로 끌어오세요</div>
+          <div class="drop-desc">또는 버튼을 눌러 PDF 파일을 선택하시거나, 바로 샘플 PDF로 편집을 체험해보실 수 있습니다.</div>
+          <div style="display: flex; gap: 12px; margin-top: 10px;">
+            <button class="btn btn-primary" onclick="document.getElementById('filePicker').click()">
+              <i data-lucide="folder-open"></i> 내 컴퓨터에서 선택
+            </button>
+            <button class="btn btn-secondary" onclick="document.getElementById('btnSample').click()">
+              <i data-lucide="sparkles"></i> 샘플 PDF로 테스트
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Left Sidebar Thumbnails -->
+      <aside id="sidebar" class="sidebar collapsed">
+        <div class="sidebar-header">
+          <span>페이지 목록</span>
+          <i data-lucide="layers" style="width: 16px; height: 16px;"></i>
+        </div>
+        <div id="thumbnailList" class="thumbnail-list"></div>
+      </aside>
+
+      <!-- Main Workspace -->
+      <main class="workspace-viewport" id="workspaceViewport">
+        <div id="pageContainer" class="page-container">
+          <canvas id="pdfCanvas" class="pdf-canvas"></canvas>
+          <div id="textOverlayLayer" class="text-overlay-layer"></div>
+        </div>
+      </main>
+
+      <!-- Right Property Inspector Panel -->
+      <aside id="inspectorPanel" class="inspector-panel">
+        <div class="inspector-header">
+          <span>텍스트 속성 설정</span>
+          <i data-lucide="sliders" style="width: 16px; height: 16px;"></i>
+        </div>
+        <div class="inspector-body">
+          <div id="selectedInfo" style="font-size: 0.75rem; color: var(--text-dim); font-family: 'JetBrains Mono';">
+            선택된 텍스트가 없습니다. PDF 상의 글자를 클릭하세요.
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">텍스트 내용 수정</label>
+            <textarea id="inpBlockText" class="form-textarea" placeholder="글자 내용을 입력하세요..." disabled></textarea>
+          </div>
+
+          <div class="form-group">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <label class="form-label">글자 크기 (Font Size)</label>
+              <span id="valFontSize" style="font-size: 0.8rem; font-family: 'JetBrains Mono'; color: var(--accent-cyan);">16px</span>
+            </div>
+            <input type="range" id="inpFontSize" min="8" max="72" value="16" disabled style="accent-color: var(--accent-primary);">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">글자 색상 (Text Color)</label>
+            <div class="color-picker-row">
+              <input type="color" id="inpTextColor" class="color-swatch-input" value="#000000" disabled>
+              <div class="swatch-grid">
+                <button class="swatch-btn" style="background: #000000;" onclick="document.getElementById('inpTextColor').value='#000000'; document.getElementById('inpTextColor').dispatchEvent(new Event('input'))"></button>
+                <button class="swatch-btn" style="background: #4f46e5;" onclick="document.getElementById('inpTextColor').value='#4f46e5'; document.getElementById('inpTextColor').dispatchEvent(new Event('input'))"></button>
+                <button class="swatch-btn" style="background: #ef4444;" onclick="document.getElementById('inpTextColor').value='#ef4444'; document.getElementById('inpTextColor').dispatchEvent(new Event('input'))"></button>
+                <button class="swatch-btn" style="background: #10b981;" onclick="document.getElementById('inpTextColor').value='#10b981'; document.getElementById('inpTextColor').dispatchEvent(new Event('input'))"></button>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">기존 글자 덮어쓰기 (Whiteout Mask)</label>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <input type="checkbox" id="chkMaskOriginal" checked disabled style="width: 18px; height: 18px; accent-color: var(--accent-primary);">
+              <span style="font-size: 0.85rem; color: var(--text-muted);">기존 글자 배경 덮어쓰기</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">마스크 배경색 (Background Color)</label>
+            <input type="color" id="inpBgColor" class="color-swatch-input" value="#ffffff" disabled>
+          </div>
+
+          <hr style="border: none; border-top: 1px solid var(--border-light); margin: 8px 0;">
+
+          <button id="btnDeleteBlock" class="btn btn-secondary" style="color: #f87171; border-color: rgba(239, 68, 68, 0.3);" disabled>
+            <i data-lucide="trash-2"></i> 텍스트 항목 삭제
+          </button>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container"></div>
+  </div>
+
+  <!-- Entry Script -->
+  <script type="module" src="./src/js/app.js"></script>
+</body>
+</html>
