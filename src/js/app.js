@@ -1,7 +1,9 @@
 // Main PDF Text Editor Application Controller
+// Aligned with silverogic/uxui guidelines (POUR, responsive design, i18n auto-detection)
 import { loadPdfDocument, renderPageToCanvas, extractPageTextItems } from './pdfParser.js';
 import { createSamplePdf } from './samplePdf.js';
 import { exportVectorPdf, triggerDownload } from './pdfExporter.js';
+import { i18n } from './i18n.js';
 
 class PdfEditorApp {
   constructor() {
@@ -17,6 +19,7 @@ class PdfEditorApp {
 
     this.initElements();
     this.initEventListeners();
+    i18n.applyToDOM();
     this.initLucideIcons();
   }
 
@@ -36,6 +39,7 @@ class PdfEditorApp {
     this.elZoomVal = document.getElementById('zoomVal');
     this.btnAddText = document.getElementById('btnAddText');
     this.btnToolSelect = document.getElementById('btnToolSelect');
+    this.btnLangToggle = document.getElementById('btnLangToggle');
 
     // Layout containers
     this.elEmptyLanding = document.getElementById('emptyLanding');
@@ -60,6 +64,17 @@ class PdfEditorApp {
   }
 
   initEventListeners() {
+    // Language switcher (silverogic/uxui i18n)
+    if (this.btnLangToggle) {
+      this.btnLangToggle.addEventListener('click', () => {
+        const nextLang = i18n.currentLocale === 'ko' ? 'en' : 'ko';
+        i18n.setLocale(nextLang);
+        this.updateInspectorPanel();
+        this.updateThumbnailLabels();
+        this.initLucideIcons();
+      });
+    }
+
     // File opening
     this.btnOpen.addEventListener('click', () => this.elFilePicker.click());
     this.elFilePicker.addEventListener('change', (e) => this.handleFileSelect(e));
@@ -67,6 +82,11 @@ class PdfEditorApp {
 
     // Drag and drop
     this.elDropZone.addEventListener('click', () => this.elFilePicker.click());
+    this.elDropZone.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        this.elFilePicker.click();
+      }
+    });
     this.elDropZone.addEventListener('dragover', (e) => {
       e.preventDefault();
       this.elDropZone.classList.add('drag-over');
@@ -108,6 +128,7 @@ class PdfEditorApp {
       if (this.selectedBlock) {
         this.selectedBlock.text = this.inpBlockText.value;
         this.selectedBlock.isEdited = true;
+        this.selectedBlock.isMasked = true;
         this.renderTextOverlay();
       }
     });
@@ -141,6 +162,7 @@ class PdfEditorApp {
     this.chkMaskOriginal.addEventListener('change', () => {
       if (this.selectedBlock) {
         this.selectedBlock.isMasked = this.chkMaskOriginal.checked;
+        this.selectedBlock.isEdited = true;
         this.renderTextOverlay();
       }
     });
@@ -158,12 +180,20 @@ class PdfEditorApp {
     }
   }
 
+  // Multi-modal feedback (colored border + icon + descriptive text, silverogic/uxui)
   showToast(message, type = 'info') {
     const container = document.getElementById('toastContainer');
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
-    toast.innerHTML = `<span>${message}</span>`;
+    
+    let iconName = 'info';
+    if (type === 'success') iconName = 'check-circle';
+    if (type === 'error') iconName = 'alert-circle';
+
+    toast.innerHTML = `<i data-lucide="${iconName}" style="width: 18px; height: 18px; flex-shrink: 0;" aria-hidden="true"></i><span>${message}</span>`;
     container.appendChild(toast);
+    this.initLucideIcons();
+
     setTimeout(() => {
       toast.style.opacity = '0';
       setTimeout(() => toast.remove(), 300);
@@ -180,7 +210,7 @@ class PdfEditorApp {
       this.btnAddText.classList.add('btn-active');
       this.btnToolSelect.classList.remove('btn-active');
       this.elPageContainer.style.cursor = 'crosshair';
-      this.showToast('페이지의 원하는 위치를 클릭하여 새 텍스트를 추가하세요.', 'info');
+      this.showToast(i18n.t('toastAddTextHint'), 'info');
     }
   }
 
@@ -198,15 +228,15 @@ class PdfEditorApp {
   }
 
   async loadSampleDocument() {
-    this.showToast('샘플 PDF 생성 중...', 'info');
+    this.showToast(i18n.t('toastSampleGenerating'), 'info');
     try {
       const sampleBytes = await createSamplePdf();
-      this.fileName = 'sample_korean_document.pdf';
+      this.fileName = 'sample_document.pdf';
       await this.loadArrayBuffer(sampleBytes.buffer);
-      this.showToast('샘플 PDF가 열렸습니다! 글자를 클릭하여 편집해보세요.', 'success');
+      this.showToast(i18n.t('toastSampleSuccess'), 'success');
     } catch (err) {
       console.error(err);
-      this.showToast('샘플 PDF 로드 실패: ' + err.message, 'error');
+      this.showToast(i18n.t('toastSampleError', { err: err.message }), 'error');
     }
   }
 
@@ -238,7 +268,7 @@ class PdfEditorApp {
       this.initLucideIcons();
     } catch (err) {
       console.error(err);
-      this.showToast('PDF 파일 읽기 오류: ' + err.message, 'error');
+      this.showToast(i18n.t('toastPdfError', { err: err.message }), 'error');
     }
   }
 
@@ -399,11 +429,13 @@ class PdfEditorApp {
       const clickX = e.clientX - rect.left;
       const clickY = e.clientY - rect.top;
 
+      const defaultText = i18n.currentLocale === 'ko' ? '새 텍스트 입력' : 'New Text';
+
       const newBlock = {
         id: `text_p${this.currentPage}_new_${Date.now()}`,
         pageNum: this.currentPage,
         originalText: '',
-        text: '새 텍스트 입력',
+        text: defaultText,
         x: clickX,
         y: clickY,
         width: 140,
@@ -425,7 +457,7 @@ class PdfEditorApp {
       this.selectBlock(newBlock);
       this.setTool('select');
       this.renderTextOverlay();
-      this.showToast('새 텍스트가 추가되었습니다. 오른쪽 패널에서 글자를 수정하세요.', 'success');
+      this.showToast(i18n.t('toastNewBlockAdded'), 'success');
     } else {
       // Click on background unselects block
       if (e.target === this.elPageContainer || e.target === this.elPdfCanvas || e.target === this.elTextOverlayLayer) {
@@ -442,7 +474,7 @@ class PdfEditorApp {
 
   updateInspectorPanel() {
     if (!this.selectedBlock) {
-      this.elSelectedInfo.textContent = '선택된 텍스트가 없습니다. PDF 상의 글자를 클릭하세요.';
+      this.elSelectedInfo.textContent = i18n.t('noSelectedText');
       this.inpBlockText.value = '';
       this.inpBlockText.disabled = true;
       this.inpFontSize.disabled = true;
@@ -454,7 +486,7 @@ class PdfEditorApp {
     }
 
     const b = this.selectedBlock;
-    this.elSelectedInfo.textContent = `ID: ${b.id} | Page: ${b.pageNum}`;
+    this.elSelectedInfo.textContent = i18n.t('selectedInfo', { id: b.id, pageNum: b.pageNum });
     this.inpBlockText.disabled = false;
     this.inpBlockText.value = b.text;
     this.inpFontSize.disabled = false;
@@ -485,7 +517,7 @@ class PdfEditorApp {
       }
       this.selectBlock(null);
       this.renderTextOverlay();
-      this.showToast('텍스트 항목이 삭제/마스킹 되었습니다.', 'info');
+      this.showToast(i18n.t('toastBlockDeleted'), 'info');
     }
   }
 
@@ -520,7 +552,7 @@ class PdfEditorApp {
 
       const label = document.createElement('div');
       label.className = 'thumbnail-label';
-      label.textContent = `Page ${p}`;
+      label.textContent = i18n.t('pageLabel', { p });
 
       card.appendChild(canvasWrap);
       card.appendChild(label);
@@ -531,6 +563,17 @@ class PdfEditorApp {
       // Render thumb canvas at small scale
       renderPageToCanvas(this.pdfDoc, p, thumbCanvas, 0.25);
     }
+  }
+
+  updateThumbnailLabels() {
+    const cards = this.elThumbnailList.querySelectorAll('.thumbnail-card');
+    cards.forEach(card => {
+      const p = parseInt(card.dataset.pageNum, 10);
+      const label = card.querySelector('.thumbnail-label');
+      if (label) {
+        label.textContent = i18n.t('pageLabel', { p });
+      }
+    });
   }
 
   updateThumbnailActiveState() {
@@ -547,11 +590,11 @@ class PdfEditorApp {
 
   async exportPdfDocument() {
     if (!this.pdfArrayBuffer && this.numPages === 0) {
-      this.showToast('수정할 PDF 파일이 로드되지 않았습니다.', 'error');
+      this.showToast(i18n.t('toastNoFile'), 'error');
       return;
     }
 
-    this.showToast('한글 임베딩 PDF 저장 중...', 'info');
+    this.showToast(i18n.t('toastExporting'), 'info');
 
     try {
       const editedPdfBytes = await exportVectorPdf(
@@ -562,10 +605,10 @@ class PdfEditorApp {
 
       const outName = this.fileName.replace(/\.pdf$/i, '') + '_edited.pdf';
       triggerDownload(editedPdfBytes, outName);
-      this.showToast(`PDF 저장 완료! (${outName})`, 'success');
+      this.showToast(i18n.t('toastExportSuccess', { name: outName }), 'success');
     } catch (err) {
       console.error(err);
-      this.showToast('PDF 내보내기 실패: ' + err.message, 'error');
+      this.showToast(i18n.t('toastExportError', { err: err.message }), 'error');
     }
   }
 }

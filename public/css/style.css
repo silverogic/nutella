@@ -1,20 +1,22 @@
 /* Design System & Glassmorphism Styles for PDF Text Editor */
+/* Adheres to silverogic/uxui: POUR principles, WCAG 2.1 Level AA, responsive design, i18n */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
   --bg-dark: #0f172a;
-  --bg-card: rgba(30, 41, 59, 0.7);
-  --bg-card-hover: rgba(51, 65, 85, 0.8);
-  --border-glow: rgba(99, 102, 241, 0.25);
-  --border-light: rgba(255, 255, 255, 0.1);
+  --bg-card: rgba(30, 41, 59, 0.75);
+  --bg-card-hover: rgba(51, 65, 85, 0.85);
+  --border-glow: rgba(99, 102, 241, 0.3);
+  --border-light: rgba(255, 255, 255, 0.15);
   --accent-primary: #6366f1;
   --accent-primary-hover: #4f46e5;
   --accent-secondary: #8b5cf6;
   --accent-cyan: #06b6d4;
   --accent-emerald: #10b981;
+  /* WCAG AA 4.5:1 text contrast compliant colors */
   --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --text-dim: #64748b;
+  --text-muted: #cbd5e1;
+  --text-dim: #94a3b8;
   --canvas-bg: #1e1e24;
   --overlay-box: rgba(99, 102, 241, 0.2);
   --overlay-box-active: rgba(139, 92, 246, 0.4);
@@ -25,6 +27,8 @@
   --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.3);
   --transition-fast: all 0.15s ease;
   --transition-normal: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Typography line-height & spacing (silverogic/uxui) */
+  --line-height-base: 1.5;
 }
 
 * {
@@ -34,10 +38,17 @@
   user-select: none;
 }
 
+/* Accessible focus visible outline (WCAG AA Operable) */
+:focus-visible {
+  outline: 2px solid var(--accent-cyan) !important;
+  outline-offset: 2px !important;
+}
+
 body {
   font-family: 'Inter', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
   background-color: var(--bg-dark);
   color: var(--text-main);
+  line-height: var(--line-height-base);
   height: 100vh;
   overflow: hidden;
   background-image: 
@@ -63,19 +74,24 @@ body {
 
 /* App Header Toolbar */
 .header-toolbar {
-  height: 64px;
+  min-height: 64px;
   padding: 0 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   border-bottom: 1px solid var(--border-light);
   z-index: 100;
+  gap: 12px;
+  flex-wrap: nowrap;
 }
 
+/* Logo Section: ensures icon displays correctly if title is cut off (responsive-design.md) */
 .logo-section {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-shrink: 0;
+  min-width: 0;
 }
 
 .logo-badge {
@@ -88,6 +104,11 @@ body {
   justify-content: center;
   color: #fff;
   box-shadow: var(--shadow-glow);
+  flex-shrink: 0;
+}
+
+.logo-text-wrap {
+  min-width: 0;
 }
 
 .app-title {
@@ -97,6 +118,9 @@ body {
   background: linear-gradient(90deg, #ffffff, #c7d2fe);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .toolbar-group {
@@ -106,7 +130,8 @@ body {
   background: rgba(15, 23, 42, 0.6);
   padding: 4px 8px;
   border-radius: var(--radius-md);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
 }
 
 .btn {
@@ -122,11 +147,12 @@ body {
   color: var(--text-main);
   cursor: pointer;
   transition: var(--transition-fast);
+  white-space: nowrap;
 }
 
 .btn:hover {
   background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 .btn-primary {
@@ -143,12 +169,12 @@ body {
 }
 
 .btn-secondary {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.18);
 }
 
 .btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.14);
 }
 
 .btn-active {
@@ -160,6 +186,11 @@ body {
 .btn-icon-only {
   padding: 8px;
   border-radius: var(--radius-sm);
+  min-width: 34px;
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Page navigation controls */
@@ -172,9 +203,9 @@ body {
 }
 
 .page-input {
-  width: 44px;
+  width: 46px;
   text-align: center;
-  background: rgba(15, 23, 42, 0.8);
+  background: rgba(15, 23, 42, 0.85);
   border: 1px solid var(--border-light);
   color: #fff;
   border-radius: var(--radius-sm);
@@ -200,7 +231,7 @@ body {
 /* Sidebar Thumbnails */
 .sidebar {
   width: 240px;
-  background: rgba(15, 23, 42, 0.85);
+  background: rgba(15, 23, 42, 0.88);
   border-right: 1px solid var(--border-light);
   display: flex;
   flex-direction: column;
@@ -220,7 +251,7 @@ body {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--text-dim);
+  color: var(--text-muted);
   border-bottom: 1px solid var(--border-light);
   display: flex;
   justify-content: space-between;
@@ -375,7 +406,7 @@ body {
 /* Right Property Inspector Panel */
 .inspector-panel {
   width: 300px;
-  background: rgba(15, 23, 42, 0.9);
+  background: rgba(15, 23, 42, 0.92);
   border-left: 1px solid var(--border-light);
   display: flex;
   flex-direction: column;
@@ -417,12 +448,13 @@ body {
 
 .form-input, .form-textarea, .form-select {
   width: 100%;
-  background: rgba(30, 41, 59, 0.8);
+  background: rgba(30, 41, 59, 0.85);
   border: 1px solid var(--border-light);
   border-radius: var(--radius-sm);
   padding: 8px 12px;
   color: #fff;
   font-size: 0.875rem;
+  line-height: var(--line-height-base);
   font-family: inherit;
   transition: var(--transition-fast);
 }
@@ -488,9 +520,9 @@ body {
   width: 100%;
   max-width: 540px;
   padding: 48px 32px;
-  border: 2px dashed rgba(99, 102, 241, 0.4);
+  border: 2px dashed rgba(99, 102, 241, 0.45);
   border-radius: var(--radius-lg);
-  background: rgba(30, 41, 59, 0.4);
+  background: rgba(30, 41, 59, 0.5);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -502,7 +534,7 @@ body {
 
 .drop-zone:hover, .drop-zone.drag-over {
   border-color: var(--accent-primary);
-  background: rgba(99, 102, 241, 0.1);
+  background: rgba(99, 102, 241, 0.12);
   box-shadow: 0 0 30px rgba(99, 102, 241, 0.2);
   transform: translateY(-2px);
 }
@@ -521,15 +553,17 @@ body {
 .drop-title {
   font-size: 1.25rem;
   font-weight: 700;
+  line-height: 1.4;
 }
 
 .drop-desc {
   font-size: 0.875rem;
   color: var(--text-muted);
-  max-width: 360px;
+  max-width: 380px;
+  line-height: var(--line-height-base);
 }
 
-/* Toast Notifications */
+/* Toast Notifications - Multi-modal signals (icon + colored border + text) */
 .toast-container {
   position: fixed;
   bottom: 24px;
@@ -546,10 +580,11 @@ body {
   min-width: 280px;
   padding: 12px 18px;
   border-radius: var(--radius-md);
-  background: rgba(30, 41, 59, 0.95);
+  background: rgba(30, 41, 59, 0.96);
   border: 1px solid var(--border-light);
   color: #fff;
   font-size: 0.875rem;
+  line-height: var(--line-height-base);
   box-shadow: var(--shadow-main);
   display: flex;
   align-items: center;
@@ -589,9 +624,31 @@ body {
   background: rgba(0, 0, 0, 0.1);
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.2);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.35);
+}
+
+/* Responsive Media Queries (silverogic/uxui responsive-design.md) */
+/* "If the logo title is too long and gets cut off, ensure at least the icon is displayed correctly." */
+@media (max-width: 1024px) {
+  .app-title {
+    display: none;
+  }
+}
+
+@media (max-width: 800px) {
+  .header-toolbar {
+    padding: 0 10px;
+    gap: 8px;
+    overflow-x: auto;
+  }
+  .btn .btn-text {
+    display: none;
+  }
+  .btn {
+    padding: 8px 10px;
+  }
 }
