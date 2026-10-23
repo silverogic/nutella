@@ -38,7 +38,7 @@
           <i data-lucide="folder-open" aria-hidden="true"></i>
           <span class="btn-text" data-i18n="openPdf">PDF 열기</span>
         </button>
-        <button id="btnSample" class="btn btn-secondary" data-i18n-title="samplePdfTooltip" title="샘플 PDF 문서로 테스트" aria-label="Load Sample PDF">
+        <button id="btnSample" class="btn btn-secondary" data-i18n-title="samplePdfTooltip" aria-label="Load Sample PDF">
           <i data-lucide="sparkles" aria-hidden="true"></i>
           <span class="btn-text" data-i18n="samplePdf">샘플 PDF</span>
         </button>
@@ -46,11 +46,11 @@
       </div>
 
       <div class="toolbar-group">
-        <button id="btnToolSelect" class="btn btn-active" data-i18n-title="toolSelectTooltip" title="텍스트 선택 및 편집 모드" aria-label="Edit Text Mode">
+        <button id="btnToolSelect" class="btn btn-active" data-i18n-title="toolSelectTooltip" aria-label="Edit Text Mode">
           <i data-lucide="mouse-pointer" aria-hidden="true"></i>
           <span class="btn-text" data-i18n="toolSelect">글자 편집</span>
         </button>
-        <button id="btnAddText" class="btn" data-i18n-title="addTextTooltip" title="새 텍스트 상자 추가" aria-label="Add Text Box">
+        <button id="btnAddText" class="btn" data-i18n-title="addTextTooltip" aria-label="Add Text Box">
           <i data-lucide="type" aria-hidden="true"></i>
           <span class="btn-text" data-i18n="addText">+ 텍스트 추가</span>
         </button>
@@ -58,33 +58,33 @@
 
       <!-- Page Nav Controls -->
       <div class="toolbar-group page-nav-controls" role="navigation" aria-label="Page Navigation">
-        <button id="btnPrevPage" class="btn btn-icon-only" aria-label="Previous Page" title="Previous Page">
+        <button id="btnPrevPage" class="btn btn-icon-only" aria-label="Previous Page" data-tooltip="Previous Page">
           <i data-lucide="chevron-left" aria-hidden="true"></i>
         </button>
         <input type="number" id="inputPageNum" class="page-input" value="1" min="1" aria-label="Current Page Number">
         <span id="totalPages" aria-label="Total Pages">/ 1</span>
-        <button id="btnNextPage" class="btn btn-icon-only" aria-label="Next Page" title="Next Page">
+        <button id="btnNextPage" class="btn btn-icon-only" aria-label="Next Page" data-tooltip="Next Page">
           <i data-lucide="chevron-right" aria-hidden="true"></i>
         </button>
       </div>
 
       <!-- Zoom Controls -->
       <div class="toolbar-group" role="group" aria-label="Zoom Controls">
-        <button id="btnZoomOut" class="btn btn-icon-only" data-i18n-title="zoomOut" title="축소" aria-label="Zoom Out">
+        <button id="btnZoomOut" class="btn btn-icon-only" data-i18n-title="zoomOut" aria-label="Zoom Out">
           <i data-lucide="zoom-out" aria-hidden="true"></i>
         </button>
         <span id="zoomVal" style="font-family: 'JetBrains Mono'; font-size: 0.85rem; min-width: 48px; text-align: center;" aria-live="polite">120%</span>
-        <button id="btnZoomIn" class="btn btn-icon-only" data-i18n-title="zoomIn" title="확대" aria-label="Zoom In">
+        <button id="btnZoomIn" class="btn btn-icon-only" data-i18n-title="zoomIn" aria-label="Zoom In">
           <i data-lucide="zoom-in" aria-hidden="true"></i>
         </button>
-        <button id="btnZoomReset" class="btn btn-icon-only" data-i18n-title="zoomReset" title="기본 크기" aria-label="Reset Zoom">
+        <button id="btnZoomReset" class="btn btn-icon-only" data-i18n-title="zoomReset" aria-label="Reset Zoom">
           <i data-lucide="rotate-ccw" aria-hidden="true"></i>
         </button>
       </div>
 
       <!-- Language Toggle & Export -->
       <div style="display: flex; align-items: center; gap: 8px;">
-        <button id="btnLangToggle" class="btn btn-secondary" title="Switch Language / 언어 전환" aria-label="Switch Language">
+        <button id="btnLangToggle" class="btn btn-secondary" data-i18n-title="langToggleTooltip" aria-label="Switch Language">
           <i data-lucide="languages" aria-hidden="true"></i>
           <span id="langToggleLabel">KO</span>
         </button>
@@ -197,6 +197,17 @@
 
     <!-- Toast Notification Container -->
     <div id="toastContainer" class="toast-container" role="status" aria-live="polite"></div>
+
+    <!-- App-Themed Spinner & Loading Overlay (silverogic/uxui: others.md) -->
+    <div id="loadingOverlay" class="loading-overlay" aria-hidden="true">
+      <div class="loading-card glass-panel">
+        <div class="app-spinner" aria-label="Loading"></div>
+        <div id="loadingText" class="loading-text">Loading...</div>
+      </div>
+    </div>
+
+    <!-- App-Themed Tooltip Element (silverogic/uxui: others.md) -->
+    <div id="appTooltip" class="app-tooltip" role="tooltip" aria-hidden="true"></div>
   </div>
 
   <!-- Entry Script -->

@@ -1,5 +1,5 @@
 /* Design System & Glassmorphism Styles for PDF Text Editor */
-/* Adheres to silverogic/uxui: POUR principles, WCAG 2.1 Level AA, responsive design, i18n */
+/* Adheres to silverogic/uxui: POUR principles, WCAG 2.1 Level AA, responsive design, i18n, app-themed spinner & tooltips */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
@@ -325,6 +325,7 @@ body {
   justify-content: center;
   align-items: flex-start;
   padding: 40px;
+  transition: padding 0.2s ease;
 }
 
 .page-container {
@@ -631,8 +632,101 @@ body {
   background: rgba(255, 255, 255, 0.35);
 }
 
-/* Responsive Media Queries (silverogic/uxui responsive-design.md) */
-/* "If the logo title is too long and gets cut off, ensure at least the icon is displayed correctly." */
+/* =========================================================================
+   App-Themed Loading Spinner & Overlay (silverogic/uxui: others.md)
+   "The spinner is also redesigned to match the app's UI theme."
+   ========================================================================= */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s;
+  pointer-events: none;
+}
+
+.loading-overlay.visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.loading-card {
+  padding: 24px 36px;
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  border: 1px solid var(--border-glow);
+  box-shadow: var(--shadow-main), 0 0 30px rgba(99, 102, 241, 0.25);
+}
+
+.app-spinner {
+  width: 42px;
+  height: 42px;
+  border: 3.5px solid rgba(99, 102, 241, 0.15);
+  border-top-color: var(--accent-cyan);
+  border-right-color: var(--accent-primary);
+  border-radius: 50%;
+  animation: appSpinnerSpin 0.75s cubic-bezier(0.5, 0.1, 0.4, 0.9) infinite;
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.35);
+}
+
+@keyframes appSpinnerSpin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-main);
+  letter-spacing: -0.01em;
+}
+
+/* =========================================================================
+   App-Themed Tooltip System (silverogic/uxui: others.md)
+   "Make sure the tooltip design also matches the app theme."
+   ========================================================================= */
+.app-tooltip {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-main);
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid var(--border-glow);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.7), 0 0 15px rgba(99, 102, 241, 0.3);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(4px) scale(0.96);
+  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
+}
+
+.app-tooltip.visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+}
+
+/* =========================================================================
+   Responsive Media Queries (silverogic/uxui: responsive-design.md)
+   - "If the logo title is too long and gets cut off, ensure at least the icon is displayed correctly."
+   - "In narrow mobile environments, reducing padding and saving horizontal cell space helps provide a sense of openness to the user."
+   ========================================================================= */
 @media (max-width: 1024px) {
   .app-title {
     display: none;
@@ -650,5 +744,35 @@ body {
   }
   .btn {
     padding: 8px 10px;
+  }
+}
+
+/* Narrow mobile environments - space saving & sense of openness */
+@media (max-width: 640px) {
+  .workspace-viewport {
+    padding: 12px 8px; /* Reduced from 40px to maximize open feeling */
+  }
+  .drop-zone {
+    padding: 24px 16px; /* Reduced padding for mobile openness */
+    gap: 12px;
+  }
+  .drop-title {
+    font-size: 1.1rem;
+  }
+  .drop-desc {
+    font-size: 0.8rem;
+  }
+  .header-toolbar {
+    min-height: 54px;
+    padding: 0 8px;
+    gap: 4px;
+  }
+  .toolbar-group {
+    padding: 2px 4px;
+    gap: 4px;
+  }
+  .btn {
+    padding: 6px 8px;
+    font-size: 0.8rem;
   }
 }

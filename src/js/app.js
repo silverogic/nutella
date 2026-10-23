@@ -1,5 +1,10 @@
 // Main PDF Text Editor Application Controller
-// Aligned with silverogic/uxui guidelines (POUR, responsive design, i18n auto-detection)
+// Aligned with silverogic/uxui guidelines:
+// - POUR principles (Perceivable, Operable, Understandable, Robust)
+// - WCAG 2.1 Level AA color contrast & line height
+// - Responsive design with mobile openness & reduced padding
+// - App-themed spinner & custom app-themed tooltips
+// - Multilingual support (i18n) with region auto-detection
 import { loadPdfDocument, renderPageToCanvas, extractPageTextItems } from './pdfParser.js';
 import { createSamplePdf } from './samplePdf.js';
 import { exportVectorPdf, triggerDownload } from './pdfExporter.js';
@@ -19,6 +24,7 @@ class PdfEditorApp {
 
     this.initElements();
     this.initEventListeners();
+    this.initAppTooltips();
     i18n.applyToDOM();
     this.initLucideIcons();
   }
@@ -61,6 +67,11 @@ class PdfEditorApp {
     this.chkMaskOriginal = document.getElementById('chkMaskOriginal');
     this.btnDeleteBlock = document.getElementById('btnDeleteBlock');
     this.elSelectedInfo = document.getElementById('selectedInfo');
+
+    // App-themed Spinner & Tooltip elements (silverogic/uxui)
+    this.loadingOverlay = document.getElementById('loadingOverlay');
+    this.loadingText = document.getElementById('loadingText');
+    this.appTooltip = document.getElementById('appTooltip');
   }
 
   initEventListeners() {
@@ -180,6 +191,71 @@ class PdfEditorApp {
     }
   }
 
+  // App-themed Loading Spinner Controls (silverogic/uxui: others.md)
+  showLoading(text) {
+    if (this.loadingText) this.loadingText.textContent = text || 'Loading...';
+    if (this.loadingOverlay) this.loadingOverlay.classList.add('visible');
+  }
+
+  hideLoading() {
+    if (this.loadingOverlay) this.loadingOverlay.classList.remove('visible');
+  }
+
+  // App-themed Tooltip System (silverogic/uxui: others.md)
+  initAppTooltips() {
+    if (!this.appTooltip) return;
+
+    const showTip = (target) => {
+      const text = target.getAttribute('data-tooltip');
+      if (!text) return;
+
+      this.appTooltip.textContent = text;
+      this.appTooltip.classList.add('visible');
+
+      const rect = target.getBoundingClientRect();
+      const tipRect = this.appTooltip.getBoundingClientRect();
+
+      let top = rect.bottom + 8;
+      let left = rect.left + (rect.width / 2) - (tipRect.width / 2);
+
+      // Boundary protection
+      if (top + tipRect.height > window.innerHeight - 8) {
+        top = rect.top - tipRect.height - 8;
+      }
+      if (left < 8) left = 8;
+      if (left + tipRect.width > window.innerWidth - 8) {
+        left = window.innerWidth - tipRect.width - 8;
+      }
+
+      this.appTooltip.style.top = `${top}px`;
+      this.appTooltip.style.left = `${left}px`;
+    };
+
+    const hideTip = () => {
+      this.appTooltip.classList.remove('visible');
+    };
+
+    document.addEventListener('mouseover', (e) => {
+      const target = e.target.closest('[data-tooltip]');
+      if (target) showTip(target);
+    });
+
+    document.addEventListener('mouseout', (e) => {
+      const target = e.target.closest('[data-tooltip]');
+      if (target) hideTip();
+    });
+
+    document.addEventListener('focusin', (e) => {
+      const target = e.target.closest('[data-tooltip]');
+      if (target) showTip(target);
+    });
+
+    document.addEventListener('focusout', (e) => {
+      const target = e.target.closest('[data-tooltip]');
+      if (target) hideTip();
+    });
+  }
+
   // Multi-modal feedback (colored border + icon + descriptive text, silverogic/uxui)
   showToast(message, type = 'info') {
     const container = document.getElementById('toastContainer');
@@ -222,13 +298,21 @@ class PdfEditorApp {
   }
 
   async openPdfFile(file) {
-    this.fileName = file.name;
-    const arrayBuffer = await file.arrayBuffer();
-    await this.loadArrayBuffer(arrayBuffer);
+    this.showLoading(i18n.t('loadingPdf'));
+    try {
+      this.fileName = file.name;
+      const arrayBuffer = await file.arrayBuffer();
+      await this.loadArrayBuffer(arrayBuffer);
+    } catch (err) {
+      console.error(err);
+      this.showToast(i18n.t('toastPdfError', { err: err.message }), 'error');
+    } finally {
+      this.hideLoading();
+    }
   }
 
   async loadSampleDocument() {
-    this.showToast(i18n.t('toastSampleGenerating'), 'info');
+    this.showLoading(i18n.t('loadingSample'));
     try {
       const sampleBytes = await createSamplePdf();
       this.fileName = 'sample_document.pdf';
@@ -237,6 +321,8 @@ class PdfEditorApp {
     } catch (err) {
       console.error(err);
       this.showToast(i18n.t('toastSampleError', { err: err.message }), 'error');
+    } finally {
+      this.hideLoading();
     }
   }
 
@@ -594,7 +680,7 @@ class PdfEditorApp {
       return;
     }
 
-    this.showToast(i18n.t('toastExporting'), 'info');
+    this.showLoading(i18n.t('exportingPdf'));
 
     try {
       const editedPdfBytes = await exportVectorPdf(
@@ -609,6 +695,8 @@ class PdfEditorApp {
     } catch (err) {
       console.error(err);
       this.showToast(i18n.t('toastExportError', { err: err.message }), 'error');
+    } finally {
+      this.hideLoading();
     }
   }
 }

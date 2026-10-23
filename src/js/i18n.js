@@ -16,6 +16,7 @@ export const translations = {
     zoomIn: "Zoom In",
     zoomReset: "Reset Zoom",
     exportPdf: "Export PDF",
+    langToggleTooltip: "Switch Language",
     pageList: "Page List",
     pageLabel: "Page {p}",
     dropTitle: "Drag and drop your PDF file here",
@@ -43,7 +44,10 @@ export const translations = {
     toastExporting: "Generating PDF...",
     toastExportSuccess: "PDF saved successfully! ({name})",
     toastExportError: "PDF export failed: {err}",
-    toastNoFile: "No PDF file loaded to export."
+    toastNoFile: "No PDF file loaded to export.",
+    loadingSample: "Generating sample PDF document...",
+    loadingPdf: "Opening PDF document...",
+    exportingPdf: "Embedding fonts & exporting PDF..."
   },
   ko: {
     appTitle: "PDF 텍스트 편집기",
@@ -58,6 +62,7 @@ export const translations = {
     zoomIn: "확대",
     zoomReset: "기본 크기",
     exportPdf: "PDF 저장 (Export)",
+    langToggleTooltip: "언어 변경 / Switch Language",
     pageList: "페이지 목록",
     pageLabel: "Page {p}",
     dropTitle: "편집할 PDF 파일을 마우스로 끌어오세요",
@@ -85,7 +90,10 @@ export const translations = {
     toastExporting: "PDF 저장 중...",
     toastExportSuccess: "PDF 저장 완료! ({name})",
     toastExportError: "PDF 내보내기 실패: {err}",
-    toastNoFile: "수정할 PDF 파일이 로드되지 않았습니다."
+    toastNoFile: "수정할 PDF 파일이 로드되지 않았습니다.",
+    loadingSample: "샘플 PDF 문서 생성 중...",
+    loadingPdf: "PDF 문서를 불러오는 중...",
+    exportingPdf: "한글 폰트 임베딩 및 PDF 저장 중..."
   }
 };
 
@@ -133,7 +141,9 @@ class I18nManager {
     document.querySelectorAll('[data-i18n-title]').forEach((el) => {
       const key = el.getAttribute('data-i18n-title');
       if (key) {
-        el.setAttribute('title', this.t(key));
+        const text = this.t(key);
+        el.setAttribute('data-tooltip', text);
+        el.removeAttribute('title'); // Suppress generic browser tooltip in favor of app theme tooltip
       }
     });
 
